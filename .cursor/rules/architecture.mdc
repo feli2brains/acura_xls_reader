@@ -1,0 +1,136 @@
+# XLSX Reader Microkernel Architecture
+
+## Project Overview
+This project implements a microkernel architecture for reading XLSX files with plugin support for different Excel templates and database writers.
+
+## Core Architecture Principles
+
+### Microkernel Pattern
+- **Core System**: Minimal, stable core that provides essential services
+- **Plugins**: Extensible components that handle specific Excel templates and database writers
+- **Plugin Registry**: Dynamic discovery and loading of plugins
+- **Interface Contracts**: Well-defined interfaces for plugin communication
+
+### Project Structure
+```
+xls_reader/
+├── core/                    # Microkernel core
+│   ├── __init__.py
+│   ├── kernel.py           # Main microkernel
+│   ├── plugin_manager.py   # Plugin registry and management
+│   ├── interfaces.py       # Abstract base classes
+│   └── exceptions.py       # Custom exceptions
+├── plugins/
+│   ├── readers/            # Excel template readers
+│   │   ├── __init__.py
+│   │   ├── base_reader.py  # Abstract reader
+│   │   └── template_*.py   # Specific template implementations
+│   └── writers/            # Database writers
+│       ├── __init__.py
+│       ├── base_writer.py  # Abstract writer
+│       └── db_*.py         # Specific database implementations
+├── utils/
+│   ├── __init__.py
+│   ├── excel_utils.py      # Excel processing utilities
+│   ├── parquet_utils.py    # Parquet conversion utilities
+│   └── config.py           # Configuration management
+├── tests/                  # Test suite
+├── docker/                 # Containerization
+├── requirements.txt        # Python dependencies
+├── setup.py               # Package setup
+└── README.md              # Project documentation
+```
+
+## Coding Standards
+
+### Python Best Practices
+- **Type Hints**: Always use type hints for function parameters and return values
+- **Docstrings**: Comprehensive docstrings following Google style
+- **Error Handling**: Robust exception handling with custom exceptions
+- **Logging**: Structured logging with appropriate levels
+- **Testing**: Unit tests with pytest, integration tests for plugins
+- **Code Quality**: Black for formatting, flake8 for linting, mypy for type checking
+
+### Plugin Development Standards
+- **Interface Compliance**: All plugins must implement defined interfaces
+- **Configuration**: Plugins should be configurable via YAML/JSON
+- **Validation**: Input validation and error reporting
+- **Performance**: Efficient processing with progress tracking
+- **Resilience**: Graceful handling of malformed data
+
+### Database Writer Standards
+- **Connection Management**: Proper connection pooling and cleanup
+- **Transaction Handling**: ACID compliance where applicable
+- **Batch Processing**: Efficient bulk operations
+- **Error Recovery**: Retry mechanisms and rollback strategies
+
+## Key Interfaces
+
+### Excel Reader Interface
+```python
+class ExcelReaderPlugin(ABC):
+    @abstractmethod
+    def can_handle(self, file_path: str) -> bool
+    
+    @abstractmethod
+    def read_excel(self, file_path: str) -> List[DataFrame]
+    
+    @abstractmethod
+    def get_schema(self) -> Dict[str, Any]
+```
+
+### Database Writer Interface
+```python
+class DatabaseWriterPlugin(ABC):
+    @abstractmethod
+    def can_handle(self, connection_string: str) -> bool
+    
+    @abstractmethod
+    def write_data(self, dataframes: List[DataFrame], config: Dict[str, Any]) -> bool
+    
+    @abstractmethod
+    def get_supported_databases(self) -> List[str]
+```
+
+## Configuration Management
+- **Plugin Discovery**: Automatic discovery of plugins in plugins/ directory
+- **Configuration Files**: YAML-based configuration for each plugin
+- **Environment Variables**: Support for environment-based configuration
+- **Validation**: Schema validation for configuration files
+
+## Containerization
+- **Docker**: Multi-stage builds for development and production
+- **Docker Compose**: Local development environment
+- **Health Checks**: Container health monitoring
+- **Volume Mounts**: Persistent data storage
+- **Environment**: Proper environment variable handling
+
+## Testing Strategy
+- **Unit Tests**: Core functionality and individual plugins
+- **Integration Tests**: End-to-end workflows
+- **Plugin Tests**: Isolated plugin testing
+- **Performance Tests**: Load testing for large files
+- **Mock Testing**: External service mocking
+
+## Error Handling
+- **Custom Exceptions**: Domain-specific exception hierarchy
+- **Graceful Degradation**: Continue processing when possible
+- **Error Reporting**: Detailed error messages with context
+- **Recovery Mechanisms**: Automatic retry and fallback strategies
+
+## Performance Considerations
+- **Memory Management**: Efficient handling of large Excel files
+- **Parallel Processing**: Multi-threading for independent operations
+- **Caching**: Intelligent caching of processed data
+- **Progress Tracking**: Real-time progress reporting
+- **Resource Cleanup**: Proper resource management
+
+## Security
+- **Input Validation**: Strict validation of Excel files
+- **Path Sanitization**: Safe file path handling
+- **Database Security**: Secure connection handling
+- **Logging Security**: No sensitive data in logs
+description:
+globs:
+alwaysApply: true
+---

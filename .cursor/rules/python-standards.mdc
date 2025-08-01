@@ -1,0 +1,91 @@
+# Python Coding Standards
+
+## Code Style and Formatting
+- **Black**: Use Black for code formatting with default settings
+- **Line Length**: Maximum 88 characters (Black default)
+- **Import Order**: Use isort for import sorting
+- **Type Hints**: Always use type hints for function parameters and return values
+- **Docstrings**: Use Google style docstrings for all public functions and classes
+
+## Type Hints Examples
+```python
+from typing import List, Dict, Optional, Union, Any
+from pandas import DataFrame
+
+def process_excel_file(file_path: str, config: Dict[str, Any]) -> List[DataFrame]:
+    """Process Excel file and return list of DataFrames.
+    
+    Args:
+        file_path: Path to the Excel file
+        config: Configuration dictionary
+        
+    Returns:
+        List of processed DataFrames
+        
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        ValueError: If file format is invalid
+    """
+    pass
+```
+
+## Error Handling
+- **Custom Exceptions**: Create domain-specific exceptions
+- **Exception Hierarchy**: Organize exceptions in logical hierarchy
+- **Context Information**: Include relevant context in error messages
+- **Graceful Degradation**: Handle errors without crashing the entire system
+
+## Logging Standards
+```python
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+def process_data(data: DataFrame, level: str = "INFO") -> bool:
+    """Process data with proper logging."""
+    logger.info(f"Processing data with {len(data)} rows")
+    try:
+        # Processing logic
+        logger.debug("Data processing completed successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to process data: {e}", exc_info=True)
+        return False
+```
+
+## Testing Standards
+- **pytest**: Use pytest for testing framework
+- **Test Naming**: Test functions should be descriptive and follow pattern `test_<function_name>_<scenario>`
+- **Fixtures**: Use pytest fixtures for test setup and teardown
+- **Mocking**: Use unittest.mock or pytest-mock for external dependencies
+- **Coverage**: Aim for 90%+ test coverage
+
+## Performance Best Practices
+- **Memory Management**: Use generators for large datasets
+- **Efficient Iteration**: Use vectorized operations with pandas
+- **Resource Cleanup**: Use context managers for file and database connections
+- **Caching**: Implement intelligent caching for expensive operations
+
+## Security Practices
+- **Input Validation**: Validate all external inputs
+- **Path Sanitization**: Use pathlib for safe path handling
+- **SQL Injection**: Use parameterized queries
+- **Sensitive Data**: Never log sensitive information
+
+## Plugin Development Standards
+- **Interface Compliance**: All plugins must implement required interfaces
+- **Configuration**: Use dataclasses or Pydantic for configuration
+- **Validation**: Validate inputs and configuration
+- **Error Reporting**: Provide detailed error messages
+- **Documentation**: Comprehensive docstrings and examples
+
+## Code Organization
+- **Single Responsibility**: Each function/class should have one clear purpose
+- **Dependency Injection**: Use dependency injection for external dependencies
+- **Configuration**: Separate configuration from business logic
+- **Constants**: Define constants at module level
+description:
+globs:
+alwaysApply: true
+---

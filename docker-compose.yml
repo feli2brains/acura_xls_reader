@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  xls-reader:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: xls-reader-dev
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - XLS_READER_LOG_LEVEL=INFO
+      - XLS_READER_OUTPUT_DIR=/app/output
+    ports:
+      - "8000:8000"
+    command: ["python", "-m", "xls_reader.cli", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - xls-reader-network
+    depends_on:
+      - mysql
+      - sqlite
+
+  xls-reader-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: testing
+    container_name: xls-reader-test
+    volumes:
+      - .:/app
+      - ./tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+      - TESTING=1
+    command: ["pytest", "tests/", "-v", "--cov=xls_reader", "--cov-report=html"]
+    networks:
+      - xls-reader-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: xls-reader-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: xls_reader
+      MYSQL_USER: xls_user
+      MYSQL_PASSWORD: xls_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - xls-reader-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  sqlite:
+    image: alpine:latest
+    container_name: xls-reader-sqlite
+    volumes:
+      - ./data:/data
+    command: ["tail", "-f", "/dev/null"]
+    networks:
+      - xls-reader-network
+
+volumes:
+  mysql_data:
+
+networks:
+  xls-reader-network:
+    driver: bridge 

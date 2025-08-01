@@ -1,0 +1,84 @@
+# Default configuration for XLSX Reader Microkernel
+
+# Plugin paths for discovery
+plugin_paths:
+  - "plugins/readers"
+  - "plugins/writers"
+
+# Reader configuration
+reader_config:
+  header_row: 0
+  skip_rows: []
+  clean_data: true
+  sheet_names: []  # Empty means all sheets
+
+# Writer configuration
+writer_config:
+  batch_size: 1000
+  if_exists: "replace"  # Options: fail, replace, append
+  create_indexes: false
+  index_columns: []
+
+# Database configuration
+database:
+  connection_timeout: 30
+  pool_size: 5
+  max_overflow: 10
+
+# Logging configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  format: "json"  # Options: json, text
+  file: null  # Path to log file (null for console only)
+  max_size: "10MB"
+  backup_count: 5
+
+# Output configuration
+output:
+  directory: "output"
+  compression: "snappy"  # Options: snappy, gzip, brotli
+  row_group_size: 100000
+  create_metadata: true
+
+# Performance configuration
+performance:
+  max_memory_usage: "1GB"
+  parallel_processing: true
+  max_workers: 4
+  chunk_size: 10000
+
+# Validation configuration
+validation:
+  strict_mode: false
+  allow_missing_columns: true
+  allow_extra_columns: true
+  data_type_validation: true
+
+# Security configuration
+security:
+  allowed_file_extensions: [".xlsx", ".xls"]
+  max_file_size: "100MB"
+  sanitize_filenames: true
+  validate_file_content: true
+
+# Plugin-specific configurations
+plugins:
+  GenericExcelReader:
+    clean_data: true
+    remove_empty_rows: true
+    remove_empty_columns: true
+  
+  SQLiteWriter:
+    create_indexes: false
+    optimize_tables: true
+  
+  MySQLWriter:
+    charset: "utf8mb4"
+    collation: "utf8mb4_unicode_ci"
+    use_unicode: true
+  
+  BigQueryWriter:
+    project_id: null  # Set via environment variable
+    dataset_id: "xls_reader"
+    location: "US"
+    write_disposition: "WRITE_TRUNCATE" 

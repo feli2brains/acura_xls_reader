@@ -1,0 +1,66 @@
+# Virtual Environment Workflow
+
+## Always Use Virtual Environment
+
+### Setup Virtual Environment
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # On macOS/Linux
+# or
+venv\Scripts\activate     # On Windows
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -e .
+```
+
+### Development Commands
+Always ensure virtual environment is activated before running any Python commands:
+
+```bash
+# Activate venv first
+source venv/bin/activate
+
+# Then run commands
+python analyze_samples.py
+python -m xls_reader.cli --help
+pytest tests/
+```
+
+### Package Management
+- Always install packages in the virtual environment
+- Use `pip install` with venv activated
+- Never install packages globally
+- Keep `requirements.txt` updated
+
+### IDE Configuration
+- Configure IDE to use the virtual environment Python interpreter
+- Path: `./venv/bin/python` (macOS/Linux) or `./venv/Scripts/python.exe` (Windows)
+- Ensure all Python tools (linting, testing) use the venv
+
+### Docker Development
+When using Docker, the virtual environment is handled inside the container:
+```bash
+# Build and run with Docker (no venv needed locally)
+docker-compose up --build
+```
+
+### Environment Variables
+Set environment variables for the virtual environment:
+```bash
+# Create .env file in project root
+echo "PYTHONPATH=./venv/lib/python3.x/site-packages" > .env
+```
+
+### Best Practices
+- Always activate venv before development
+- Never commit venv directory to git
+- Use `requirements.txt` for dependency management
+- Keep venv isolated per project
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,271 @@
+# Development Workflow for XLSX Reader Microkernel
+
+## Development Environment Setup
+
+### Prerequisites
+- Python 3.8+
+- Docker and Docker Compose
+- Git
+
+### Initial Setup
+```bash
+# Clone and setup
+git clone <repository-url>
+cd xls_reader
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -e .
+
+# Setup development environment
+docker-compose up -d
+```
+
+## Development Workflow
+
+### 1. Plugin Development
+When creating new plugins:
+
+1. **Create plugin file** in appropriate directory:
+   - Excel readers: `xls_reader/plugins/readers/template_*.py`
+   - Database writers: `xls_reader/plugins/writers/db_*.py`
+
+2. **Inherit from base classes**:
+   - Readers: `BaseExcelReader`
+   - Writers: `BaseDatabaseWriter`
+
+3. **Implement required methods**:
+   - `metadata` property
+   - `can_handle()` method
+   - `read_excel()` or `write_data()` method
+   - `get_schema()` or `get_supported_databases()` method
+
+4. **Add tests** in `tests/` directory
+
+5. **Update documentation** in README.md
+
+### 2. Testing Strategy
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=xls_reader --cov-report=html
+
+# Run specific test file
+pytest tests/test_kernel.py -v
+
+# Run tests in Docker
+docker-compose run xls-reader-test
+```
+
+### 3. Code Quality
+```bash
+# Format code
+black xls_reader/
+isort xls_reader/
+
+# Lint code
+flake8 xls_reader/
+mypy xls_reader/
+
+# Run all quality checks
+make quality-check
+```
+
+### 4. Configuration Management
+- Use `config/default.yaml` for default settings
+- Override with environment variables
+- Create `config/local.yaml` for local development
+- Use Docker secrets for production
+
+### 5. Database Development
+```bash
+# Start database services
+docker-compose up mysql sqlite
+
+# Connect to MySQL
+docker-compose exec mysql mysql -u xls_user -p xls_reader
+
+# Test database connections
+python -m xls_reader.cli test-plugin SQLiteWriter writer sqlite:///test.db
+```
+
+## Plugin Development Guidelines
+
+### Excel Reader Plugins
+```python
+from xls_reader.plugins.readers.base_reader import BaseExcelReader
+from xls_reader.core.interfaces import PluginMetadata
+
+class CustomExcelReader(BaseExcelReader):
+    @property
+    def metadata(self) -> PluginMetadata:
+        return PluginMetadata(
+            name="CustomExcelReader",
+            version="1.0.0",
+            description="Custom Excel reader",
+            author="Your Name",
+            plugin_type="reader",
+            supported_formats=["xlsx"]
+        )
+    
+    def can_handle(self, file_path: str) -> bool:
+        # Implement detection logic
+        return "custom_template" in file_path.lower()
+    
+    def read_excel(self, file_path: str, config: Optional[Dict[str, Any]] = None) -> List[pd.DataFrame]:
+        # Implement reading logic
+        pass
+    
+    def get_schema(self) -> Dict[str, Any]:
+        # Return expected schema
+        return {"required_columns": [], "column_types": {}}
+```
+
+### Database Writer Plugins
+```python
+from xls_reader.plugins.writers.base_writer import BaseDatabaseWriter
+
+class CustomDatabaseWriter(BaseDatabaseWriter):
+    @property
+    def metadata(self) -> PluginMetadata:
+        return PluginMetadata(
+            name="CustomDatabaseWriter",
+            version="1.0.0",
+            description="Custom database writer",
+            author="Your Name",
+            plugin_type="writer",
+            supported_formats=["custom_db"]
+        )
+    
+    def can_handle(self, connection_string: str) -> bool:
+        return connection_string.startswith("custom://")
+    
+    def write_data(self, dataframes: List[pd.DataFrame], config: Dict[str, Any]) -> bool:
+        # Implement writing logic
+        pass
+    
+    def get_supported_databases(self) -> List[str]:
+        return ["custom_db"]
+    
+    def test_connection(self, connection_string: str) -> bool:
+        # Implement connection testing
+        pass
+```
+
+## Debugging and Troubleshooting
+
+### Common Issues
+1. **Plugin not discovered**: Check plugin path in configuration
+2. **Import errors**: Ensure all dependencies are installed
+3. **Database connection issues**: Verify connection strings and credentials
+4. **Memory issues**: Adjust batch sizes and chunk processing
+
+### Debug Commands
+```bash
+# Enable verbose logging
+python -m xls_reader.cli --verbose process file.xlsx
+
+# Test plugin discovery
+python -m xls_reader.cli list-plugins
+
+# Validate Excel file
+python -m xls_reader.cli validate file.xlsx
+
+# Test specific plugin
+python -m xls_reader.cli test-plugin GenericExcelReader reader file.xlsx
+```
+
+## Performance Optimization
+
+### Memory Management
+- Use chunked processing for large files
+- Implement streaming for database writes
+- Monitor memory usage with large datasets
+
+### Parallel Processing
+- Enable parallel processing in configuration
+- Use appropriate worker counts
+- Implement async operations where possible
+
+### Database Optimization
+- Use batch operations for database writes
+- Implement connection pooling
+- Create appropriate indexes
+
+## Security Considerations
+
+### File Validation
+- Validate file extensions
+- Check file content integrity
+- Sanitize file paths
+
+### Database Security
+- Use parameterized queries
+- Implement proper authentication
+- Secure connection strings
+
+### Input Validation
+- Validate all user inputs
+- Implement schema validation
+- Handle malformed data gracefully
+
+## Deployment
+
+### Docker Deployment
+```bash
+# Build production image
+docker build -f docker/Dockerfile --target production -t xls-reader:latest .
+
+# Run production container
+docker run -v $(pwd)/data:/app/data -v $(pwd)/output:/app/output xls-reader:latest
+```
+
+### Environment Configuration
+```bash
+# Set environment variables
+export XLS_READER_LOG_LEVEL=INFO
+export XLS_READER_OUTPUT_DIR=/app/output
+export XLS_READER_DB_CONNECTION=sqlite:///data/database.db
+```
+
+## Monitoring and Logging
+
+### Logging Levels
+- DEBUG: Detailed debugging information
+- INFO: General information about processing
+- WARNING: Warning messages for potential issues
+- ERROR: Error messages for failed operations
+
+### Metrics to Monitor
+- Processing time per file
+- Memory usage
+- Database connection pool usage
+- Plugin discovery and loading times
+- Error rates and types
+
+## Contributing Guidelines
+
+### Code Standards
+- Follow PEP 8 style guidelines
+- Use type hints for all functions
+- Write comprehensive docstrings
+- Add tests for new features
+
+### Pull Request Process
+1. Create feature branch
+2. Implement changes with tests
+3. Run quality checks
+4. Update documentation
+5. Submit pull request
+
+### Testing Requirements
+- Unit tests for all new code
+- Integration tests for plugins
+- Performance tests for large datasets
+- Security tests for file handling
+description:
+globs:
+alwaysApply: false
+---
